@@ -1,0 +1,32 @@
+{
+  "id": "./",
+  "name": "Carnet — Mon carnet de cuisine",
+  "short_name": "Carnet",
+  "description": "Recettes, saisons et idées avec les ingrédients du frigo. Données locales.",
+  "lang": "fr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f7f9fa",
+  "theme_color": "#183c52",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
