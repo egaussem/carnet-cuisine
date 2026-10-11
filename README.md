@@ -57,3 +57,9 @@ Tests : `node scripts/test-sync.cjs` et `node scripts/test-sync-flow.cjs`, en pl
 ## Correctif 2.1.2
 
 Mettre à jour les deux apps. Le PIN à 4 chiffres est valable dix minutes, avec un blocage après cinq erreurs. Le code copié inclut l’adresse du Mac. Le PIN sert uniquement à obtenir un jeton de transfert aléatoire de 192 bits sur HTTPS. Le panneau iPhone affiche les étapes, la durée et un diagnostic local sans code de connexion ni contenu des recettes. Le bouton « Tester la connexion seulement » ne modifie aucun carnet. Un rechargement interrompant un échange est signalé à la réouverture, puis la transaction éventuelle reprend à la prochaine tentative. Aucune mise à jour ne recharge automatiquement sans demande.
+
+## Carnet 2.2
+
+QR code lu dans l’app installée via la caméra, sans envoi d’images. Décodeur jsQR inclus localement (commit et licence Apache-2.0 dans docs/jsQR-NOTICE.txt et docs/jsQR-LICENSE.txt). Résumé avant synchronisation, planning hebdomadaire, courses regroupées avec unités compatibles, adaptation des quantités, mode cuisine et impression/PDF. Le partage JSON contient une seule recette et ses photos. Les temps de cuisson ne sont pas multipliés. Les quantités libres sont conservées. Le frigo contient des noms : l’exclusion des ingrédients disponibles est explicite et ne vérifie aucune quantité.
+
+Planning et courses sont sauvegardés avec les recettes et fusionnés par identifiant selon la dernière synchronisation réussie. Les conflits proposent iPhone, Mac ou les deux. Le protocole de données 2 exige la mise à jour des deux apps pour éviter qu’une ancienne version perde ces nouveaux champs. Le PIN temporaire et les certificats restent inchangés. Le maintien de l’écran dépend des possibilités du navigateur ; sur Mac, une activité de mode cuisine le maintient éveillé. La caméra est libérée dès fermeture/arrêt/masquage. Tests : node scripts/test-kitchen.cjs et tests existants.
