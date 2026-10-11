@@ -14,6 +14,7 @@ const recipe=(id,title)=>({id,title,photos:[],notes:'',updatedAt:'2026-01-01'}),
  next=await core.plan(state([changed]),state([a]),null);assert.equal(next.conflicts.length,1);
  next=await core.plan(state([],['Ail']),state([],['Oignon']),null);assert.deepEqual(next.state.pantry,['Ail','Oignon']);
  const code='192.168.1.23:12345/'+'A'.repeat(32);assert.equal(core.endpoint(code).url,'https://192.168.1.23:12345');
- for(const invalid of ['8.8.8.8:12345/'+ 'A'.repeat(32),'192.168.1.999:12345/'+ 'A'.repeat(32),'192.168.1.1:80/'+ 'A'.repeat(32),'https://evil.test','127.0.0.1:12345/'+ 'A'.repeat(32),code+'@evil.test'])assert.throws(()=>core.endpoint(invalid));
+ for(const invalid of ['8.8.8.8:12345/'+ 'A'.repeat(32),'192.168.1.999:12345/'+ 'A'.repeat(32),'192.168.1.1:80/'+ 'A'.repeat(32),'010.8.8.8:12345/'+ 'A'.repeat(32),'https://evil.test','127.0.0.1:12345/'+ 'A'.repeat(32),code+'@evil.test'])assert.throws(()=>core.endpoint(invalid));
+ const reserved=await core.plan(state([recipe('constructor','Test')]),state([]),null);assert.equal(reserved.conflicts.length,0);assert.equal(reserved.state.recipes.length,1);
  console.log('PASS sync: canonical hashes, first union, one-sided changes/deletions, edit/edit and edit/delete conflicts, pantry, private endpoint validation.');
 })().catch(e=>{console.error(e);process.exitCode=1});
