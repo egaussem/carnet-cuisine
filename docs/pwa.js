@@ -1,5 +1,5 @@
 'use strict';
-let webRegistration=null,installPrompt=null,offlineReady=false;
+let webRegistration=null,installPrompt=null,offlineReady=false,reloadPending=false;
 const installed=()=>window.matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
 const webSettings=$('#web-settings');
 $('#app-settings').onclick=()=>{webSettings.showModal();refreshWebStatus()};
@@ -15,13 +15,18 @@ async function refreshWebStatus(){
  $('#cache-status').textContent=offlineReady?'L’application est prête à fonctionner hors connexion. Une connexion est nécessaire pour récupérer les mises à jour.':'Le téléchargement initial de l’application n’est pas terminé. Gardez une connexion et réessayez.';
  if(installed()){$('#install-help').textContent='Carnet est ouvert comme application. Utilisez cette fenêtre pour votre carnet et vos sauvegardes.';$('#install-app').hidden=true}else if(!installPrompt){$('#install-help').textContent=/iPhone|iPad|iPod/.test(navigator.userAgent)?'Dans Safari : Partager → Sur l’écran d’accueil → Ajouter. Installez Carnet avant d’importer votre sauvegarde : Safari et l’app peuvent avoir des stockages distincts.':'Dans le menu de votre navigateur, choisissez « Installer Carnet » ou « Ajouter au Dock ». Si l’installation n’est pas proposée, Carnet fonctionne aussi dans cet onglet.';}
  try{const kept=await navigator.storage?.persisted?.();$('#storage-status').textContent=kept?'Le navigateur a accordé la conservation du stockage. Gardez également une sauvegarde exportée.':'Le carnet est enregistré localement. Le navigateur peut libérer ce stockage : exportez régulièrement une sauvegarde.';$('#persist-storage').hidden=!!kept||!navigator.storage?.persist;let date;try{date=localStorage.getItem(storageName+':backup')}catch{}$('#backup-status').textContent=date?'Dernier export demandé le '+dateFR(date)+'. Vérifiez que le fichier a bien été conservé.':'Aucune sauvegarde exportée depuis cette installation.';$('#recover-previous').hidden=!db||!await previousState();}catch{$('#storage-status').textContent='Le statut du stockage n’est pas disponible. Gardez une sauvegarde exportée.'}
- $('#apply-update').hidden=!webRegistration?.waiting;
+ $('#apply-update').hidden=!webRegistration?.waiting&&!reloadPending;
 }
 $('#recover-previous').onclick=async()=>{try{const old=await previousState();if(!old)return;const restored=validateState(old);if(!await confirmAction('Récupérer l’enregistrement précédent ?','Le carnet actuel sera remplacé par sa copie locale précédente. Exportez-le d’abord si vous souhaitez le conserver.','Récupérer'))return;await commit(restored);detailId=null;webSettings.close();render();toast('Enregistrement précédent récupéré')}catch(e){toast(e.message||e)}};
 $('#check-update').onclick=async()=>{try{if(!navigator.onLine)throw new Error('Reconnectez-vous pour vérifier les mises à jour.');if(!webRegistration)await registerOffline();if(webRegistration){await webRegistration.update();await refreshWebStatus();toast(webRegistration.waiting?'Une mise à jour est disponible.':'Vérification effectuée. Les mises à jour disponibles seront proposées ici.')}}catch(e){toast(e.message||e)}};
-$('#apply-update').onclick=async()=>{if(!webRegistration?.waiting)return;if(!await window.carnetMayClose())return;webRegistration.waiting.postMessage({type:'ACTIVATE_UPDATE'});};
+$('#apply-update').onclick=async()=>{if(!webRegistration?.waiting&&!reloadPending)return;if(!await window.carnetMayClose())return;if(reloadPending){location.reload();return;}webRegistration.waiting.postMessage({type:'ACTIVATE_UPDATE'});};
 let hadController=!!navigator.serviceWorker?.controller;
-navigator.serviceWorker?.addEventListener('controllerchange',()=>{if(hadController)location.reload();else{hadController=true;offlineReady=true;refreshWebStatus()}});
+navigator.serviceWorker?.addEventListener('controllerchange',()=>{
+ if(hadController){
+  if(window.carnetSyncLocked||saving||draft){reloadPending=true;refreshWebStatus();toast('Mise à jour prête. Terminez la synchronisation ou votre fiche avant de l’appliquer.');}
+  else location.reload();
+ }else{hadController=true;offlineReady=true;refreshWebStatus()}
+});
 async function registerOffline(){if(!('serviceWorker' in navigator)||!window.isSecureContext){$('#cache-status').textContent='Une adresse HTTPS est nécessaire pour installer le fonctionnement hors connexion.';return;}webRegistration=await navigator.serviceWorker.register('./sw.js',{scope:'./',updateViaCache:'none'});offlineReady=!!webRegistration.active;webRegistration.addEventListener('updatefound',()=>{const worker=webRegistration.installing;worker?.addEventListener('statechange',()=>{if(worker.state==='installed'){offlineReady=!!webRegistration.active||!navigator.serviceWorker.controller;refreshWebStatus()}})});navigator.serviceWorker.ready.then(()=>{offlineReady=true;refreshWebStatus()});await refreshWebStatus();}
 window.addEventListener('online',refreshWebStatus);window.addEventListener('offline',refreshWebStatus);
 registerOffline().catch(()=>{offlineReady=false;refreshWebStatus();$('#cache-status').textContent='Le téléchargement hors connexion a échoué. Reconnectez-vous puis utilisez « Vérifier les mises à jour ».'});
