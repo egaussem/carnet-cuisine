@@ -1,0 +1,19 @@
+const assert=require('node:assert/strict'),{webcrypto}=require('node:crypto');global.crypto=webcrypto;
+const core=require('../docs/sync-core.js');
+const recipe=(id,title)=>({id,title,photos:[],notes:'',updatedAt:'2026-01-01'}),state=(recipes,pantry=[])=>({version:1,recipes,pantry});
+(async()=>{
+ const a=recipe('a','Tarte'),b=recipe('b','Soupe'),c=recipe('c','Salade');
+ assert.equal(await core.hash({b:2,a:1}),await core.hash({a:1,b:2}));
+ const initial=await core.plan(state([a]),state([b]),null);assert.deepEqual(initial.state.recipes,[a,b]);assert.equal(initial.conflicts.length,0);
+ const base=await core.fingerprint(state([a,b],['Tomate']));
+ let next=await core.plan(state([a,b,c],['Tomate','Ail']),state([a,b],['Tomate']),base);assert.deepEqual(next.state.recipes,[a,b,c]);assert.deepEqual(next.state.pantry,['Tomate','Ail']);
+ next=await core.plan(state([a]),state([a,b]),base);assert.deepEqual(next.state.recipes,[a]);assert.equal(next.conflicts.length,0);
+ const changed={...a,title:'Tarte modifiée'};next=await core.plan(state([changed,b]),state([a,b]),base);assert.deepEqual(next.state.recipes,[changed,b]);
+ next=await core.plan(state([changed,b]),state([{...a,title:'Tarte autre'},b]),base);assert.equal(next.conflicts.length,1);assert.equal(next.conflicts[0].id,'a');assert.equal(next.state.recipes.length,1);
+ next=await core.plan(state([b]),state([changed,b]),base);assert.equal(next.conflicts.length,1);assert.equal(next.conflicts[0].local,null);
+ next=await core.plan(state([changed]),state([a]),null);assert.equal(next.conflicts.length,1);
+ next=await core.plan(state([],['Ail']),state([],['Oignon']),null);assert.deepEqual(next.state.pantry,['Ail','Oignon']);
+ const code='192.168.1.23:12345/'+'A'.repeat(32);assert.equal(core.endpoint(code).url,'https://192.168.1.23:12345');
+ for(const invalid of ['8.8.8.8:12345/'+ 'A'.repeat(32),'192.168.1.999:12345/'+ 'A'.repeat(32),'192.168.1.1:80/'+ 'A'.repeat(32),'https://evil.test','127.0.0.1:12345/'+ 'A'.repeat(32),code+'@evil.test'])assert.throws(()=>core.endpoint(invalid));
+ console.log('PASS sync: canonical hashes, first union, one-sided changes/deletions, edit/edit and edit/delete conflicts, pantry, private endpoint validation.');
+})().catch(e=>{console.error(e);process.exitCode=1});
