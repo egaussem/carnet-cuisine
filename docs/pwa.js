@@ -1,5 +1,5 @@
 'use strict';
-let webRegistration=null,installPrompt=null,offlineReady=false,reloadPending=false;
+let webRegistration=null,installPrompt=null,offlineReady=false,reloadPending=false,updateRequested=false;
 const installed=()=>window.matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
 const webSettings=$('#web-settings');
 $('#app-settings').onclick=()=>{webSettings.showModal();refreshWebStatus()};
@@ -19,12 +19,12 @@ async function refreshWebStatus(){
 }
 $('#recover-previous').onclick=async()=>{try{const old=await previousState();if(!old)return;const restored=validateState(old);if(!await confirmAction('Récupérer l’enregistrement précédent ?','Le carnet actuel sera remplacé par sa copie locale précédente. Exportez-le d’abord si vous souhaitez le conserver.','Récupérer'))return;await commit(restored);detailId=null;webSettings.close();render();toast('Enregistrement précédent récupéré')}catch(e){toast(e.message||e)}};
 $('#check-update').onclick=async()=>{try{if(!navigator.onLine)throw new Error('Reconnectez-vous pour vérifier les mises à jour.');if(!webRegistration)await registerOffline();if(webRegistration){await webRegistration.update();await refreshWebStatus();toast(webRegistration.waiting?'Une mise à jour est disponible.':'Vérification effectuée. Les mises à jour disponibles seront proposées ici.')}}catch(e){toast(e.message||e)}};
-$('#apply-update').onclick=async()=>{if(!webRegistration?.waiting&&!reloadPending)return;if(!await window.carnetMayClose())return;if(reloadPending){location.reload();return;}webRegistration.waiting.postMessage({type:'ACTIVATE_UPDATE'});};
+$('#apply-update').onclick=async()=>{if(!webRegistration?.waiting&&!reloadPending)return;if(!await window.carnetMayClose())return;if(reloadPending){location.reload();return;}updateRequested=true;webRegistration.waiting.postMessage({type:'ACTIVATE_UPDATE'});};
 let hadController=!!navigator.serviceWorker?.controller;
 navigator.serviceWorker?.addEventListener('controllerchange',()=>{
  if(hadController){
-  if(window.carnetSyncLocked||saving||draft){reloadPending=true;refreshWebStatus();toast('Mise à jour prête. Terminez la synchronisation ou votre fiche avant de l’appliquer.');}
-  else location.reload();
+  if(updateRequested&&!window.carnetSyncLocked&&!saving&&!draft)location.reload();
+  else{reloadPending=true;refreshWebStatus();toast('Mise à jour prête. Vous pouvez l’appliquer depuis Installation et sauvegardes.');}
  }else{hadController=true;offlineReady=true;refreshWebStatus()}
 });
 async function registerOffline(){if(!('serviceWorker' in navigator)||!window.isSecureContext){$('#cache-status').textContent='Une adresse HTTPS est nécessaire pour installer le fonctionnement hors connexion.';return;}webRegistration=await navigator.serviceWorker.register('./sw.js',{scope:'./',updateViaCache:'none'});offlineReady=!!webRegistration.active;webRegistration.addEventListener('updatefound',()=>{const worker=webRegistration.installing;worker?.addEventListener('statechange',()=>{if(worker.state==='installed'){offlineReady=!!webRegistration.active||!navigator.serviceWorker.controller;refreshWebStatus()}})});navigator.serviceWorker.ready.then(()=>{offlineReady=true;refreshWebStatus()});await refreshWebStatus();}
