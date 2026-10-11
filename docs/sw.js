@@ -1,8 +1,8 @@
 // Generated from the public app files. No recipes or personal photos are cached here.
 'use strict';
-const FILES=["app.js", "editor-tools.js", "favicon.svg", "foraging.js", "icons/apple-touch-icon.png", "icons/icon-192.png", "icons/icon-512.png", "icons/icon-maskable.png", "index.html", "ingredients.js", "manifest.webmanifest", "produce-icons.js", "pwa.js", "ratatouille.png", "recipe-tools.js", "seasons.js", "seed-photo.js", "style.css", "web.css"];
+const FILES=["app.js", "editor-tools.js", "favicon.svg", "foraging.js", "icons/.gitkeep", "icons/apple-touch-icon.png", "icons/icon-192.png", "icons/icon-512.png", "icons/icon-maskable.png", "index.html", "ingredients.js", "manifest.webmanifest", "produce-icons.js", "pwa.js", "ratatouille.png", "recipe-tools.js", "seasons.js", "seed-photo.js", "style.css", "sync-core.js", "sync.css", "sync.js", "web.css"];
 const PREFIX='carnet-pwa:'+encodeURIComponent(new URL(self.registration.scope).pathname)+':';
-const CACHE=PREFIX+'e4bc93c8eb76949b';
+const CACHE=PREFIX+'94350e0eaeec9f26';
 const BASE=new URL(self.registration.scope);
 const ASSETS=new Set(FILES.map(p=>new URL(p,BASE).href));
 self.addEventListener('install',event=>event.waitUntil((async()=>{const cache=await caches.open(CACHE);await cache.addAll(FILES.map(p=>new Request(new URL(p,BASE),{cache:'reload'})));})()));
