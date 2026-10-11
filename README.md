@@ -1,4 +1,4 @@
-# Carnet 2.0 — application web installable
+# Carnet 2.1 — application web installable
 
 Carnet sert à écrire des recettes, suivre leurs préparations, prévoir une version en bocaux et retrouver des idées avec les ingrédients du frigo. Il inclut les saisons des fruits et légumes en France et un calendrier indicatif de cueillette autour d’Annecy.
 
@@ -12,7 +12,7 @@ Attendez « Disponible hors connexion » avant de quitter la connexion. Les mise
 
 Les recettes, photos et ingrédients du frigo sont enregistrés dans IndexedDB sur chaque appareil. Aucun compte, serveur de données, télémétrie ou outil d’IA n’est utilisé. Les fichiers hébergés sont uniquement les ressources de l’app. L’hébergeur reçoit les demandes de téléchargement habituelles du site ; le contenu du carnet n’est pas transmis.
 
-Chaque appareil et chaque navigateur possède son propre carnet. Il n’y a pas de synchronisation automatique. Pour transférer le carnet, exportez un fichier JSON puis importez-le sur l’autre appareil. Les recettes avec le même identifiant sont mises à jour ; les autres sont conservées. La liste du frigo contenue dans la sauvegarde remplace celle de l’appareil.
+Chaque appareil et chaque navigateur possède son propre carnet. La synchronisation locale avec le Mac est déclenchée à votre demande (voir ci-dessous). Vous pouvez aussi transférer un carnet en exportant un fichier JSON puis en l’important sur l’autre appareil. Les recettes avec le même identifiant sont mises à jour ; les autres sont conservées. La liste du frigo contenue dans la sauvegarde remplace celle de l’appareil.
 
 Dans l’application Mac : **Sauvegarder mon carnet**, transférer le fichier par AirDrop ou Fichiers, puis **Installation et sauvegardes → Importer un carnet** dans l’application web installée. Photos, étapes, historique et temps d’attente sont inclus.
 
@@ -31,3 +31,25 @@ Aucune dépendance ni compilation nécessaire : HTML, CSS, JavaScript et SVG loc
 Après toute modification des ressources, exécuter `python3 scripts/build-sw.py` : l’empreinte du cache est calculée sur les fichiers publics. Le service worker ne met en cache que cette liste, ne traite pas les requêtes externes et nettoie uniquement les caches appartenant à cette app. Le carnet est stocké séparément et ne fait pas partie du cache d’application.
 
 Tests : `node scripts/test-core.cjs` et `node scripts/test-web.cjs`. Tester aussi le formulaire, l’import de photos, l’export, le rechargement après arrêt du serveur et la mise à jour dans un navigateur réel. Les petits écrans sont pris en charge ; un essai sur un iPhone physique reste nécessaire pour valider son menu d’installation et les sélecteurs de photos propres à iOS.
+
+
+## Synchronisation locale (2.1.0)
+
+La version Mac native et la version web installée échangent les recettes, les photos, les favoris, l’historique et le frigo directement sur le réseau local. GitHub héberge seulement les fichiers publics de l’application.
+
+1. Remplacer l’ancienne application Mac par Carnet 2.1.0. Les données restent dans Application Support/CarnetCuisine.
+2. Dans l’app iPhone : Installation et sauvegardes → Vérifier les mises à jour → Installer la mise à jour. Garder cette installation : ne pas effacer ses données.
+3. Sur le Mac : Synchroniser mes appareils → Démarrer la connexion au Mac.
+4. À la première connexion seulement, ouvrir « Première connexion : préparer l’iPhone ». Enregistrer le certificat, l’envoyer par AirDrop à l’iPhone, puis installer le profil dans Réglages → Général → VPN et gestion de l’appareil. Activer ensuite le certificat « Carnet - connexion personnelle au Mac » dans Général → Informations → Réglages des certificats. Le profil ne contient que le certificat public de ce Mac. Sa clé privée reste sur le Mac. [Instructions Apple](https://support.apple.com/fr-fr/102390).
+5. Copier le code du Mac et le coller dans Carnet sur l’iPhone → Synchroniser mes appareils. Le presse-papiers universel peut faciliter cette étape si déjà configuré ; sinon recopier le code. Relancer la connexion Mac si les 10 minutes ont expiré pendant la configuration.
+6. Choisir les versions à garder si une recette a changé sur les deux appareils, puis confirmer l’échange. Garder les deux apps ouvertes jusqu’à la confirmation.
+
+Le serveur HTTPS est lié à une adresse privée du Mac, accessible pendant dix minutes, avec un code aléatoire renouvelé à chaque session. Il s’arrête après confirmation de l’iPhone, annulation, expiration ou fermeture de l’app. Aucune ouverture de port sur la Freebox n’est nécessaire. Accepter l’accès au réseau local si macOS ou iOS le demande. La synchronisation Mac nécessite macOS 15 ou ultérieur ; les recettes restent utilisables sur macOS 13+.
+
+Les ajouts et les modifications faits sur un seul appareil sont repris automatiquement. Les suppressions sont propagées après une première synchronisation réussie. Lorsqu’une recette est modifiée des deux côtés, l’app propose la version iPhone, la version Mac ou les deux. Pour le frigo, les changements d’un seul côté sont repris ; si les deux listes ont changé, les ingrédients sont réunis.
+
+Une copie avant synchronisation est conservée sur chaque appareil et peut être récupérée depuis le panneau de synchronisation. Une transaction interrompue est mémorisée sur l’iPhone et reprise lors d’une nouvelle connexion. Les copies et la référence de synchronisation sont locales ; elles ne sont pas téléversées. Garder aussi des sauvegardes exportées hors de l’app.
+
+Le certificat expire après cinq ans : il faudra alors le renouveler et refaire la configuration iPhone. Il peut être retiré à tout moment dans Réglages → Général → VPN et gestion de l’appareil. Les clés, certificats personnels et carnets ne font jamais partie du dépôt public.
+
+Tests : `node scripts/test-sync.cjs` et `node scripts/test-sync-flow.cjs`, en plus des tests existants. Après modification des fichiers publics, régénérer le service worker avec `python3 scripts/build-sw.py`.
