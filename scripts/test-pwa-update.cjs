@@ -7,8 +7,8 @@ function fixture(controller=true){
  return {context,get,change:()=>events.controllerchange(),reloads:()=>reloads,deny:()=>canClose=false,allow:()=>canClose=true};
 }
 (async()=>{
- let t=fixture();t.change();assert.equal(t.reloads(),1);
- t=fixture(false);t.change();assert.equal(t.reloads(),0);t.change();assert.equal(t.reloads(),1);
+ let t=fixture();t.change();assert.equal(t.reloads(),0);await t.get('#apply-update').onclick();assert.equal(t.reloads(),1);
+ t=fixture(false);t.change();assert.equal(t.reloads(),0);t.change();assert.equal(t.reloads(),0);await t.get('#apply-update').onclick();assert.equal(t.reloads(),1);
  for(const field of ['lock','saving','draft']){
   t=fixture();if(field==='lock')t.context.window.carnetSyncLocked=true;else t.context[field]=true;
   t.change();assert.equal(t.reloads(),0);await vm.runInContext('refreshWebStatus()',t.context);assert.equal(t.get('#apply-update').hidden,false);
