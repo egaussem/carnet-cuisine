@@ -53,3 +53,7 @@ Une copie avant synchronisation est conservée sur chaque appareil et peut être
 Le certificat expire après cinq ans : il faudra alors le renouveler et refaire la configuration iPhone. Il peut être retiré à tout moment dans Réglages → Général → VPN et gestion de l’appareil. Les clés, certificats personnels et carnets ne font jamais partie du dépôt public.
 
 Tests : `node scripts/test-sync.cjs` et `node scripts/test-sync-flow.cjs`, en plus des tests existants. Après modification des fichiers publics, régénérer le service worker avec `python3 scripts/build-sw.py`.
+
+## Correctif 2.1.2
+
+Mettre à jour les deux apps. Le PIN à 4 chiffres est valable dix minutes, avec un blocage après cinq erreurs. Le code copié inclut l’adresse du Mac. Le PIN sert uniquement à obtenir un jeton de transfert aléatoire de 192 bits sur HTTPS. Le panneau iPhone affiche les étapes, la durée et un diagnostic local sans code de connexion ni contenu des recettes. Le bouton « Tester la connexion seulement » ne modifie aucun carnet. Un rechargement interrompant un échange est signalé à la réouverture, puis la transaction éventuelle reprend à la prochaine tentative. Aucune mise à jour ne recharge automatiquement sans demande.
