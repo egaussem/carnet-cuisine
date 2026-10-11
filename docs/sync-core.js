@@ -3,7 +3,7 @@
 const CarnetSyncCore=(()=>{
  function canonical(value){if(Array.isArray(value))return '['+value.map(canonical).join(',')+']';if(value&&typeof value==='object')return '{'+Object.keys(value).sort().map(k=>JSON.stringify(k)+':'+canonical(value[k])).join(',')+'}';return JSON.stringify(value);}
  async function hash(value){const bytes=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(canonical(value)));return [...new Uint8Array(bytes)].map(x=>x.toString(16).padStart(2,'0')).join('');}
- async function fingerprint(state){const recipes=Object.create(null);for(const recipe of state.recipes)recipes[recipe.id]=await hash(recipe);return {recipes,pantry:await hash(state.pantry||[])};}
+ async function fingerprint(state){const recipes=Object.create(null);for(const recipe of state.recipes)recipes[recipe.id]=await hash(recipe);const extras={};for(const key of ['planner','shopping']){extras[key]=Object.create(null);for(const item of state[key]||[])extras[key][item.id]=await hash(item);}return {recipes,pantry:await hash(state.pantry||[]),...extras};}
  async function plan(local,remote,base){
   const left=await fingerprint(local),right=await fingerprint(remote),lm=new Map(local.recipes.map(r=>[r.id,r])),rm=new Map(remote.recipes.map(r=>[r.id,r]));
   const recipes=[],conflicts=[];
@@ -14,9 +14,21 @@ const CarnetSyncCore=(()=>{
   }
   let pantry;
   if(left.pantry===right.pantry)pantry=local.pantry||[];else if(base&&left.pantry===base.pantry)pantry=remote.pantry||[];else if(base&&right.pantry===base.pantry)pantry=local.pantry||[];else pantry=[...new Set([...(local.pantry||[]),...(remote.pantry||[])])];
-  return {state:{version:1,recipes,pantry},conflicts};
+  const extras={};for(const key of ['planner','shopping']){
+   extras[key]=[];const lm=new Map((local[key]||[]).map(x=>[x.id,x])),rm=new Map((remote[key]||[]).map(x=>[x.id,x]));
+   for(const id of new Set([...lm.keys(),...rm.keys(),...Object.keys(base?.[key]||{})])){
+    const l=left[key][id],r=right[key][id],b=Object.hasOwn(base?.[key]||{},id)?base[key][id]:undefined;let chosen;
+    if(l===r)chosen=lm.get(id);else if(base&&l===b)chosen=rm.get(id);else if(base&&r===b)chosen=lm.get(id);else if(!base&&!l)chosen=rm.get(id);else if(!base&&!r)chosen=lm.get(id);else{conflicts.push({id,collection:key,local:lm.get(id)||null,remote:rm.get(id)||null});continue;}
+    if(chosen)extras[key].push(chosen);
+   }
+  }return {state:{version:1,recipes,pantry,...extras},conflicts};
  }
  function endpoint(code){const match=String(code).trim().match(/^(\d{1,3}(?:\.\d{1,3}){3}):(\d{1,5})\/([A-Za-z0-9_-]{32}|[0-9]{4})$/);if(!match)throw new Error('Collez le code complet affiché sur le Mac.');const ip=match[1].split('.').map(Number),port=Number(match[2]);if(match[1]!==ip.join('.')||ip.some(n=>n>255)||port<1024||port>65535||!(ip[0]===10||(ip[0]===192&&ip[1]===168)||(ip[0]===172&&ip[1]>=16&&ip[1]<=31)))throw new Error('Le code doit désigner un Mac sur votre réseau local.');return {url:'https://'+match[1]+':'+port,token:match[3],pairing:match[3].length===4};}
- return {canonical,hash,fingerprint,plan,endpoint};
+ function changes(before,after,key='recipes'){
+  const old=new Map((before[key]||[]).map(x=>[x.id,x])),next=new Map((after[key]||[]).map(x=>[x.id,x]));
+  return {added:[...next.values()].filter(x=>!old.has(x.id)),changed:[...next.values()].filter(x=>old.has(x.id)&&canonical(old.get(x.id))!==canonical(x)),removed:[...old.values()].filter(x=>!next.has(x.id))};
+ }
+ function summary(before,after,label){const lines=[label];for(const [key,title] of [['recipes','Recettes'],['planner','Repas'],['shopping','Courses']]){const c=changes(before,after,key);lines.push(title+' : '+c.added.length+' ajout(s), '+c.changed.length+' modification(s), '+c.removed.length+' suppression(s).');if(key==='recipes')for(const [verb,list] of [['Ajouter',c.added],['Modifier',c.changed],['Supprimer',c.removed]]){lines.push(...list.slice(0,12).map(x=>verb+' : '+x.title));if(list.length>12)lines.push('… et '+(list.length-12)+' autre(s).');}}if(canonical(before.pantry||[])!==canonical(after.pantry||[]))lines.push('Le frigo sera mis à jour.');return lines.join('\n');}
+ return {canonical,hash,fingerprint,plan,endpoint,changes,summary};
 })();
 if(typeof module!=='undefined')module.exports=CarnetSyncCore;

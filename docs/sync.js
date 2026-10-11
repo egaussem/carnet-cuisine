@@ -13,7 +13,7 @@ function syncTraceRender(){
  if(!syncTrace){log.textContent='Aucune tentative enregistrée.';duration.textContent='';return;}
  const seconds=Math.floor(((syncTrace.ended||Date.now())-syncTrace.started)/1000);
  duration.textContent='Durée : '+seconds+' s'+(syncRequest?' · délai de réponse maximal : '+syncRequest.seconds+' s':'');
- log.textContent='Carnet 2.1.2 · '+new Date(syncTrace.started).toLocaleString('fr-FR')+'\n'+syncTrace.steps.map(x=>x.at+' s — '+x.text).join('\n');
+ log.textContent='Carnet 2.2.0 · '+new Date(syncTrace.started).toLocaleString('fr-FR')+'\n'+syncTrace.steps.map(x=>x.at+' s — '+x.text).join('\n');
 }
 function syncStage(text){syncMessage(text);if(syncTrace?.active){syncTrace.steps.push({at:Math.floor((Date.now()-syncTrace.started)/1000),text});syncTrace.steps=syncTrace.steps.slice(-16);syncTraceSave();}}
 function syncTraceStart(){syncTrace={started:Date.now(),active:true,steps:[]};clearInterval(syncClock);syncClock=setInterval(syncTraceRender,1000);syncStage('Démarrage de la connexion.');}
@@ -28,7 +28,7 @@ window.addEventListener('carnet-ready',syncRecoverDiagnostic,{once:true});
 if(window.carnetReady)queueMicrotask(syncRecoverDiagnostic);
 function syncStore(key,value){return new Promise((resolve,reject)=>{if(!db){reject(new Error('Le carnet n’est pas encore ouvert.'));return;}const tx=db.transaction('data',value===undefined?'readonly':'readwrite'),store=tx.objectStore('data'),req=value===undefined?store.get(key):store.put(value,key);tx.oncomplete=()=>resolve(req.result);tx.onerror=()=>reject(tx.error);tx.onabort=()=>reject(tx.error||new Error('Le stockage de la synchronisation est plein.'));});}
 async function syncSnapshot(){return validateState(await exportState());}
-async function syncClose(){if(syncRunning)return;clearInterval(syncPoll);if(native)await bridge('syncStop');syncInfo=null;window.carnetSyncLocked=false;syncDialog.close();}
+async function syncClose(){if(syncRunning)return;stopQRScan();clearInterval(syncPoll);if(native)await bridge('syncStop');syncInfo=null;window.carnetSyncLocked=false;syncDialog.close();}
 syncDialog.addEventListener('cancel',e=>{e.preventDefault();syncClose().catch(e=>syncMessage(e.message));});
 document.querySelector('#sync-close').onclick=()=>syncClose().catch(e=>syncMessage(e.message));
 syncButton.onclick=async()=>{
@@ -37,17 +37,18 @@ syncButton.onclick=async()=>{
  window.carnetSyncLocked=true;syncDialog.showModal();syncMessage('');syncTraceRender();
  const content=document.querySelector('#sync-content');
  if(native){
-  content.innerHTML='<p>Ouvrez Carnet sur l’iPhone, sur le même Wi-Fi, puis choisissez « Synchroniser mes appareils ».</p><p>La connexion dure 10 minutes et s’arrête à la fin de l’échange.</p><button class="primary" id="sync-start">Démarrer la connexion au Mac</button><section id="sync-pair" hidden><label>Code à coller dans Carnet sur l’iPhone<input id="sync-code" readonly spellcheck="false"></label><button class="secondary" id="sync-copy">Copier le code</button><details><summary>Première connexion : préparer l’iPhone</summary><p>Enregistrez le certificat, puis envoyez ce fichier à votre iPhone par AirDrop. Installez-le dans Réglages → Général → VPN et gestion de l’appareil. Puis activez « Carnet - connexion personnelle au Mac » dans Général → Informations → Réglages des certificats.</p><p>Ce certificat appartient à ce Mac. Cette configuration se fait une seule fois ; les recettes passent ensuite directement entre vos appareils.</p><button class="secondary" id="sync-profile">Enregistrer le certificat pour l’iPhone</button></details></section>';
+  content.innerHTML='<p>Ouvrez Carnet sur l’iPhone, sur le même Wi-Fi, puis choisissez « Synchroniser mes appareils ».</p><p>La connexion dure 10 minutes et s’arrête à la fin de l’échange.</p><button class="primary" id="sync-start">Démarrer la connexion au Mac</button><section id="sync-pair" hidden><p>Dans Carnet sur l’iPhone, choisissez « Scanner le QR code du Mac ».</p><img id="sync-qr" alt="QR code de connexion temporaire à ce Mac" hidden><label>Code à coller dans Carnet sur l’iPhone<input id="sync-code" readonly spellcheck="false"></label><button class="secondary" id="sync-copy">Copier le code</button><details><summary>Première connexion : préparer l’iPhone</summary><p>Enregistrez le certificat, puis envoyez ce fichier à votre iPhone par AirDrop. Installez-le dans Réglages → Général → VPN et gestion de l’appareil. Puis activez « Carnet - connexion personnelle au Mac » dans Général → Informations → Réglages des certificats.</p><p>Ce certificat appartient à ce Mac. Cette configuration se fait une seule fois ; les recettes passent ensuite directement entre vos appareils.</p><button class="secondary" id="sync-profile">Enregistrer le certificat pour l’iPhone</button></details></section>';
   document.querySelector('#sync-start').onclick=async()=>{try{
    syncRunning=true;document.querySelector('#sync-close').disabled=true;window.carnetSyncLocked=true;syncMessage('Préparation de la connexion sécurisée…');document.querySelector('#sync-start').disabled=true;
-   syncInfo=await bridge('syncStart');syncHostCommit=null;document.querySelector('#sync-code').value=syncInfo.addresses[0].replace('https://','')+'/'+(syncInfo.pin||syncInfo.token);document.querySelector('#sync-pair').hidden=false;syncMessage('Prêt. PIN : '+(syncInfo.pin||'ancien code')+'. Connexion valable 10 minutes.');
+   syncInfo=await bridge('syncStart');syncHostCommit=null;document.querySelector('#sync-code').value=syncInfo.addresses[0].replace('https://','')+'/'+(syncInfo.pin||syncInfo.token);document.querySelector('#sync-pair').hidden=false;if(syncInfo.qr){document.querySelector('#sync-qr').src=syncInfo.qr;document.querySelector('#sync-qr').hidden=false;}syncMessage('Prêt. PIN : '+(syncInfo.pin||'ancien code')+'. Connexion valable 10 minutes.');
    clearInterval(syncPoll);syncPoll=setInterval(async()=>{try{if(syncInfo?.expires)document.querySelector('#sync-duration').textContent='Code valable encore '+Math.max(0,Math.ceil((Date.parse(syncInfo.expires)-Date.now())/1000))+' s';if(!await bridge('syncStatus')){clearInterval(syncPoll);syncInfo=null;document.querySelector('#sync-start').disabled=false;document.querySelector('#sync-pair').hidden=true;window.carnetSyncLocked=false;if(!syncHostCommit)syncMessage('Connexion terminée. Vous pouvez en démarrer une nouvelle.');}}catch{}},2000);
   }catch(e){document.querySelector('#sync-start').disabled=false;syncMessage(e.message||String(e));}finally{syncRunning=false;document.querySelector('#sync-close').disabled=false;}};
   document.querySelector('#sync-copy').onclick=async()=>{const input=document.querySelector('#sync-code');input.select();try{await bridge('syncCopy',{text:input.value});syncMessage('Code copié. Collez-le dans l’app iPhone.')}catch{syncMessage('Sélectionnez le code et copiez-le avec ⌘C.')}};
   document.querySelector('#sync-profile').onclick=async()=>{try{if(await bridge('syncProfile'))syncMessage('Envoyez le certificat par AirDrop, installez-le sur l’iPhone, puis démarrez une nouvelle connexion si celle-ci a expiré.')}catch(e){syncMessage(e.message)}};
  }else{
-  content.innerHTML='<p>Sur le Mac, ouvrez Carnet → Synchroniser mes appareils → Démarrer la connexion. Gardez les deux apps ouvertes sur le même Wi-Fi. La 4G/5G seule ne permet pas de joindre le Mac.</p><section id="sync-phone-form"><label>Code affiché sur le Mac<input id="sync-phone-code" required autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="192.168.1.12:12345/1234"></label><button type="button" class="primary" id="sync-connect">Connecter et synchroniser</button><button type="button" class="secondary" id="sync-test">Tester la connexion seulement</button></section><details><summary>Vérifier le certificat sur l’iPhone</summary><p>AirDrop transfère le fichier mais ne termine pas la configuration. Vérifiez le profil Carnet dans Réglages → Général → VPN et gestion de l’appareil, puis activez la confiance totale pour « Carnet - connexion personnelle au Mac » dans Général → Informations → Réglages des certificats. Le profil installé ne suffit pas : cette activation est également nécessaire.</p></details><div id="sync-conflicts"></div>';
+  content.innerHTML='<p>Sur le Mac, ouvrez Carnet → Synchroniser mes appareils → Démarrer la connexion. Gardez les deux apps ouvertes sur le même Wi-Fi. La 4G/5G seule ne permet pas de joindre le Mac.</p><button type="button" class="primary" id="sync-scan">Scanner le QR code du Mac</button><div id="sync-camera" hidden><video autoplay muted playsinline></video><button type="button" class="secondary" id="sync-camera-stop">Arrêter la caméra</button></div><section id="sync-phone-form"><label>Code affiché sur le Mac<input id="sync-phone-code" required autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="192.168.1.12:12345/1234"></label><button type="button" class="primary" id="sync-connect">Connecter et synchroniser</button><button type="button" class="secondary" id="sync-test">Tester la connexion seulement</button></section><details><summary>Vérifier le certificat sur l’iPhone</summary><p>AirDrop transfère le fichier mais ne termine pas la configuration. Vérifiez le profil Carnet dans Réglages → Général → VPN et gestion de l’appareil, puis activez la confiance totale pour « Carnet - connexion personnelle au Mac » dans Général → Informations → Réglages des certificats. Le profil installé ne suffit pas : cette activation est également nécessaire.</p></details><div id="sync-conflicts"></div>';
   const connect=event=>{event?.preventDefault();event?.stopPropagation();return syncPhone().catch(e=>syncMessage(e.message||String(e)));};
+  document.querySelector('#sync-scan').onclick=startQRScan;
   document.querySelector('#sync-connect').onclick=connect;
   document.querySelector('#sync-test').onclick=event=>{event.preventDefault();event.stopPropagation();syncPhone(true).catch(e=>syncMessage(e.message));};
   document.querySelector('#sync-phone-code').addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();connect();}});
@@ -72,6 +73,7 @@ async function syncFetch(endpoint,path,body){
  }finally{clearTimeout(timer);syncRequest=null;document.querySelector('#sync-cancel-request').hidden=true;syncTraceRender();}
 }
 function syncChoose(conflict){
+ if(conflict.collection)return chooseKitchenConflict(conflict);
  return new Promise(resolve=>{
   const box=document.querySelector('#sync-conflicts');box.replaceChildren();const heading=document.createElement('h3');heading.textContent='Deux versions : '+(conflict.local?.title||conflict.remote?.title);box.append(heading);
   const caption=document.createElement('p');caption.textContent='Choisissez la version à conserver sur les deux appareils. Une copie avant synchronisation reste disponible.';box.append(caption);
@@ -81,13 +83,13 @@ function syncChoose(conflict){
  });
 }
 async function syncPhone(testOnly=false){
- if(syncRunning)return;syncRunning=true;syncTraceStart();document.querySelector('#sync-test').disabled=true;document.querySelector('#sync-connect').disabled=true;document.querySelector('#sync-close').disabled=true;
+ if(syncRunning)return;stopQRScan();syncRunning=true;syncTraceStart();document.querySelector('#sync-test').disabled=true;document.querySelector('#sync-connect').disabled=true;document.querySelector('#sync-close').disabled=true;
  try{
   if(navigator.onLine===false)throw new Error('HORS CONNEXION : connectez l’iPhone au Wi-Fi du Mac.');
   const endpoint=CarnetSyncCore.endpoint(document.querySelector('#sync-phone-code').value);
   if(endpoint.pairing){syncStage('Vérification du PIN à 4 chiffres…');const paired=await syncFetch(endpoint,'/pair',{});if(paired.protocol!==1||!/^[-_a-zA-Z0-9]{32}$/.test(paired.token))throw new Error('Version du Mac incompatible.');endpoint.token=paired.token;}
   syncStage('Connexion au Mac et réception du carnet…');
-  const remote=await syncFetch(endpoint,'/snapshot');if(remote.protocol!==1||!/^[-a-zA-Z0-9]{36}$/.test(remote.hostID)||typeof remote.digest!=='string')throw new Error('Version du Mac incompatible.');
+  const remote=await syncFetch(endpoint,'/snapshot');if(remote.protocol!==2||!/^[-a-zA-Z0-9]{36}$/.test(remote.hostID)||typeof remote.digest!=='string')throw new Error('Mettez à jour Carnet sur le Mac et l’iPhone vers la version 2.2.');
   const their=validateState(remote.state);if(await CarnetSyncCore.hash(their)!==remote.digest)throw new Error('Le carnet reçu est incomplet. Réessayez.');
   syncStage('Mac joignable. Carnet reçu : '+their.recipes.length+' recette(s).');
   if(testOnly){syncStage('TEST RÉUSSI : connexion sécurisée au Mac opérationnelle. Aucun carnet modifié.');return;}
@@ -96,10 +98,10 @@ async function syncPhone(testOnly=false){
   if(pending?.hostID===remote.hostID&&pending.previous===mineHash&&await CarnetSyncCore.hash(pending.state)===remote.digest){merged=validateState(pending.state);syncStage('Reprise de l’échange interrompu…');}
   else{
    const result=await CarnetSyncCore.plan(mine,their,base);merged=result.state;
-   for(const conflict of result.conflicts){syncStage('Choix nécessaire : une recette a changé sur les deux appareils.');const chosen=await syncChoose(conflict);if(chosen===null){syncMessage('Synchronisation annulée. Aucun carnet modifié.');return;}merged.recipes.push(...chosen);}
+   for(const conflict of result.conflicts){syncStage('Choix nécessaire : une recette a changé sur les deux appareils.');const chosen=await syncChoose(conflict);if(chosen===null){syncMessage('Synchronisation annulée. Aucun carnet modifié.');return;}merged[conflict.collection||'recipes'].push(...chosen);}
    merged=validateState(merged);
    syncStage('En attente de votre confirmation : '+merged.recipes.length+' recette(s) sur chaque appareil.');
-   if(!await confirmAction('Synchroniser les deux carnets ?',`${merged.recipes.length} recette(s) seront présentes sur chaque appareil, photos comprises. Les ingrédients du frigo seront également réunis. Une copie des carnets actuels sera conservée.`,'Synchroniser')){syncMessage('Synchronisation annulée.');return;}
+   if(!await confirmAction('Synchroniser les deux carnets ?',CarnetSyncCore.summary(mine,merged,'Sur l’iPhone')+'\n\n'+CarnetSyncCore.summary(their,merged,'Sur le Mac')+'\n\nUne copie des carnets actuels sera conservée, photos comprises.','Synchroniser')){syncMessage('Synchronisation annulée.');return;}
    syncStage('Sauvegarde de la copie iPhone avant échange…');
    await syncStore('sync-before',mine);await syncStore('sync-pending',{hostID:remote.hostID,previous:mineHash,state:merged});
    syncStage('Envoi des recettes et des photos au Mac…');
@@ -115,7 +117,7 @@ async function syncPhone(testOnly=false){
 }
 window.CarnetSyncHost={async handle(path,body){
  if(!native||!syncInfo||!window.carnetSyncLocked)throw new Error('La connexion au Mac est fermée.');
- if(path==='/snapshot'){const snapshot=await syncSnapshot();return {protocol:1,hostID:syncInfo.hostID,digest:await CarnetSyncCore.hash(snapshot),state:snapshot};}
+ if(path==='/snapshot'){const snapshot=await syncSnapshot();return {protocol:2,hostID:syncInfo.hostID,digest:await CarnetSyncCore.hash(snapshot),state:snapshot};}
  if(path==='/commit'){
   if(syncRunning)throw new Error('Un échange est déjà en cours.');
   syncRunning=true;document.querySelector('#sync-close').disabled=true;
