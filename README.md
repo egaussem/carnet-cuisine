@@ -1,4 +1,4 @@
-# Carnet 2.1 — application web installable
+# Carnet 2.3 — application web installable
 
 Carnet sert à écrire des recettes, suivre leurs préparations, prévoir une version en bocaux et retrouver des idées avec les ingrédients du frigo. Il inclut les saisons des fruits et légumes en France et un calendrier indicatif de cueillette autour d’Annecy.
 
@@ -63,3 +63,13 @@ Mettre à jour les deux apps. Le PIN à 4 chiffres est valable dix minutes, avec
 QR code lu dans l’app installée via la caméra, sans envoi d’images. Décodeur jsQR inclus localement (commit et licence Apache-2.0 dans docs/jsQR-NOTICE.txt et docs/jsQR-LICENSE.txt). Résumé avant synchronisation, planning hebdomadaire, courses regroupées avec unités compatibles, adaptation des quantités, mode cuisine et impression/PDF. Le partage JSON contient une seule recette et ses photos. Les temps de cuisson ne sont pas multipliés. Les quantités libres sont conservées. Le frigo contient des noms : l’exclusion des ingrédients disponibles est explicite et ne vérifie aucune quantité.
 
 Planning et courses sont sauvegardés avec les recettes et fusionnés par identifiant selon la dernière synchronisation réussie. Les conflits proposent iPhone, Mac ou les deux. Le protocole de données 2 exige la mise à jour des deux apps pour éviter qu’une ancienne version perde ces nouveaux champs. Le PIN temporaire et les certificats restent inchangés. Le maintien de l’écran dépend des possibilités du navigateur ; sur Mac, une activité de mode cuisine le maintient éveillé. La caméra est libérée dès fermeture/arrêt/masquage. Tests : node scripts/test-kitchen.cjs et tests existants.
+
+
+### Correctif 2.2.1
+
+Catalogue de pictogrammes élargi : produits frais, fromages, céréales, ingrédients végétaux, épices, sauces et fruits de mer. Les suggestions sont disponibles avant de créer des recettes. Meilleure reconnaissance des noms composés, accents, pluriels et graphies courantes (échalotte, palenta). Icônes vectorielles locales, disponibles hors connexion.
+
+
+### Carnet 2.3 — design
+
+Navigation claire avec icônes vectorielles, sept sections visibles sur petit écran, couleurs par catégorie sur les filtres et fiches, repères visuels des ingrédients et temps de préparation. Les couleurs complètent les libellés et icônes. Les fonctions, le stockage et le protocole de synchronisation restent compatibles avec 2.2.
