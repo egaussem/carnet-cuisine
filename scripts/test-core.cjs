@@ -67,3 +67,11 @@ assert(run('stepDisplay({kind:"Marinade",minutes:"",text:"Mélanger"})').include
 assert.equal(run('validateSteps([{kind:"Séchage à l’air libre",minutes:"30",text:"Laisser sécher"}])[0].minutes'),'30');
 assert.equal(run('waitSummary({...state.recipes[0],waitItems:[]})'),'');
 console.log('PASS v1.5: waiting times validation and backup round-trip, optional section, bottom delete, new step kinds and icons.');
+
+// Compound labels must choose the specific product, including accents and common spellings.
+for(const [input,target] of [['Mascarpone','Mascarpone'],['Palenta','Polenta'],['Échalottes','Échalote'],['Patates douces','Patate douce'],['Crème de coco','Crème de coco'],['Sauce de poisson','Sauce de poisson'],['Noix de pécan','Noix de pécan'],['Pommes de terre','Pomme de terre'],['Graines de chia','Graine de chia']])assert.equal(run(`ingredientSymbol(${JSON.stringify(input)})`),run(`produceIcon(${JSON.stringify(target)})`),input);
+assert.notEqual(run('ingredientSymbol("Vanille")'),run('ingredientSymbol("Ingrédient inconnu")'));
+assert.equal(run('ingredientSymbol("Pain de mie")'),run('produceIcon("Pain")'));
+assert.notEqual(run('ingredientSymbol("Eau")'),run('ingredientSymbol("Poireaux")'));
+assert(run('ingredientCatalog().includes("Tofu") && ingredientCatalog().includes("Avocat") && ingredientCatalog().includes("Polenta")'));
+console.log('PASS icon coverage: compound product specificity, plurals/accents/spelling, no partial-word matches, expanded catalog before recipes.');
