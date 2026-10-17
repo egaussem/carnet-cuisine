@@ -1,4 +1,4 @@
-# Carnet 2.3 — application web installable
+# Carnet 2.4 — application web installable
 
 Carnet sert à écrire des recettes, suivre leurs préparations, prévoir une version en bocaux et retrouver des idées avec les ingrédients du frigo. Il inclut les saisons des fruits et légumes en France et un calendrier indicatif de cueillette autour d’Annecy.
 
@@ -73,3 +73,12 @@ Catalogue de pictogrammes élargi : produits frais, fromages, céréales, ingré
 ### Carnet 2.3 — design
 
 Navigation claire avec icônes vectorielles, sept sections visibles sur petit écran, couleurs par catégorie sur les filtres et fiches, repères visuels des ingrédients et temps de préparation. Les couleurs complètent les libellés et icônes. Les fonctions, le stockage et le protocole de synchronisation restent compatibles avec 2.2.
+
+
+### Carnet 2.4 — sous-recettes
+
+Créer et enregistrer séparément les préparations (bouillon, œufs marinés, sauce). Dans la fiche du plat, ouvrir Modifier → Les sous-recettes → Ajouter une sous-recette. Choisir la préparation, les portions utilisées pour le nombre de personnes de la fiche, et une précision facultative. Une base pour 4 portions utilisée à moitié se règle à 2 portions. Les fractions sont acceptées. Ne pas répéter les ingrédients des préparations dans ceux du plat.
+
+À la consultation, adapter les personnes : les quantités de chaque préparation suivent ce choix, les durées restent inchangées. Ouvrir les ingrédients/étapes dans la fiche ou ouvrir la préparation et revenir au plat. Les modifications de la préparation sont reprises dans tous les plats qui l’utilisent. Les courses additionnent les ingrédients de toute la composition. Le mode cuisine parcourt les préparations avant l’assemblage ; PDF et partage JSON incluent les sous-recettes, photos comprises.
+
+Une recette utilisée doit être retirée des liens avant suppression. Les cycles et les liens manquants sont refusés ; imbrication limitée à 8 niveaux et 64 préparations directes. Mettre à jour Mac et iPhone vers 2.4 avant synchronisation : le protocole 3 protège les nouveaux liens contre leur perte par les anciennes versions. Les anciennes sauvegardes restent importables. Aucun exemple n’est ajouté au carnet personnel et aucune donnée n’est envoyée à GitHub.
