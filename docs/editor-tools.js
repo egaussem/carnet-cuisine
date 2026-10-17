@@ -43,6 +43,10 @@ function recipeIcon(kind){const paths={
  'Personnes':'M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM2 21v-3a7 7 0 0 1 14 0v3M17 4a4 4 0 0 1 0 7M19 14q3 1 3 7',
  'Historique':'M12 3a9 9 0 1 1-9 9M3 3v6h6M12 7v5l4 2',
  'Temps':'M12 3a9 9 0 1 1 0 18 9 9 0 0 1 0-18ZM12 7v5l4 2',
+ 'Ingrédients':'M5 4h14v18H5ZM9 2h6v4H9ZM8 10h2M12 10h4M8 15h2M12 15h4',
+ 'Notes':'M5 3h14v18H5ZM8 8h8M8 12h8M8 16h5',
+ 'Photos':'M3 5h18v15H3ZM3 16l5-5 5 5 3-3 5 5M15 9h1',
+ 'Bocaux':'M7 2h10v4H7ZM7 6v3l-2 3v9h14v-9l-2-3V6M5 14h14',
  'Autre':'M5 12h2M11 12h2M17 12h2'};return `<svg class="recipe-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="${paths[kind]||paths.Autre}"/></svg>`;}
 function validateWaits(items){if(items===undefined)return [];if(!Array.isArray(items)||items.length>30)throw new Error('Prévoyez au maximum 30 temps d’attente.');return items.map((w,i)=>{if(!w||!WAIT_KINDS.includes(w.kind)||typeof w.duration!=='string'||!w.duration.trim()||w.duration.length>100||typeof w.note!=='string'||w.note.length>2000)throw new Error(`Temps d’attente ${i+1} : précisez une durée (par exemple 2 h ou une nuit).`);return {kind:w.kind,duration:w.duration.trim(),note:w.note.trim()};});}
 function renderWaitEditor(){$('#wait-rows').innerHTML=draft.waitItems.map((w,i)=>`<div class="wait-row"><label>Type<select data-wait="kind">${WAIT_KINDS.map(k=>`<option ${k===w.kind?'selected':''}>${k}</option>`).join('')}</select></label><label>Durée<input data-wait="duration" maxlength="100" placeholder="2 h, 4 à 6 h, une nuit…" value="${esc(w.duration)}" required></label><button type="button" class="icon-button" data-remove-wait="${i}" aria-label="Retirer le temps d’attente ${i+1}">×</button><label class="wait-note">Consignes <small>facultatives</small><textarea data-wait="note" rows="2" maxlength="2000" placeholder="À quel moment, dans quel récipient, à quel endroit…">${esc(w.note)}</textarea></label></div>`).join('');}

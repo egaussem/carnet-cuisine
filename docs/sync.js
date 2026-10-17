@@ -13,7 +13,7 @@ function syncTraceRender(){
  if(!syncTrace){log.textContent='Aucune tentative enregistrée.';duration.textContent='';return;}
  const seconds=Math.floor(((syncTrace.ended||Date.now())-syncTrace.started)/1000);
  duration.textContent='Durée : '+seconds+' s'+(syncRequest?' · délai de réponse maximal : '+syncRequest.seconds+' s':'');
- log.textContent='Carnet 2.5.0 · '+new Date(syncTrace.started).toLocaleString('fr-FR')+'\n'+syncTrace.steps.map(x=>x.at+' s — '+x.text).join('\n');
+ log.textContent='Carnet 2.6.0 · '+new Date(syncTrace.started).toLocaleString('fr-FR')+'\n'+syncTrace.steps.map(x=>x.at+' s — '+x.text).join('\n');
 }
 function syncStage(text){syncMessage(text);if(syncTrace?.active){syncTrace.steps.push({at:Math.floor((Date.now()-syncTrace.started)/1000),text});syncTrace.steps=syncTrace.steps.slice(-16);syncTraceSave();}}
 function syncTraceStart(){syncTrace={started:Date.now(),active:true,steps:[]};clearInterval(syncClock);syncClock=setInterval(syncTraceRender,1000);syncStage('Démarrage de la connexion.');}
