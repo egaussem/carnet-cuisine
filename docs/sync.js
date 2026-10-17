@@ -13,7 +13,7 @@ function syncTraceRender(){
  if(!syncTrace){log.textContent='Aucune tentative enregistrée.';duration.textContent='';return;}
  const seconds=Math.floor(((syncTrace.ended||Date.now())-syncTrace.started)/1000);
  duration.textContent='Durée : '+seconds+' s'+(syncRequest?' · délai de réponse maximal : '+syncRequest.seconds+' s':'');
- log.textContent='Carnet 2.3.2 · '+new Date(syncTrace.started).toLocaleString('fr-FR')+'\n'+syncTrace.steps.map(x=>x.at+' s — '+x.text).join('\n');
+ log.textContent='Carnet 2.4.0 · '+new Date(syncTrace.started).toLocaleString('fr-FR')+'\n'+syncTrace.steps.map(x=>x.at+' s — '+x.text).join('\n');
 }
 function syncStage(text){syncMessage(text);if(syncTrace?.active){syncTrace.steps.push({at:Math.floor((Date.now()-syncTrace.started)/1000),text});syncTrace.steps=syncTrace.steps.slice(-16);syncTraceSave();}}
 function syncTraceStart(){syncTrace={started:Date.now(),active:true,steps:[]};clearInterval(syncClock);syncClock=setInterval(syncTraceRender,1000);syncStage('Démarrage de la connexion.');}
@@ -77,7 +77,7 @@ function syncChoose(conflict){
  return new Promise(resolve=>{
   const box=document.querySelector('#sync-conflicts');box.replaceChildren();const heading=document.createElement('h3');heading.textContent='Deux versions : '+(conflict.local?.title||conflict.remote?.title);box.append(heading);
   const caption=document.createElement('p');caption.textContent='Choisissez la version à conserver sur les deux appareils. Une copie avant synchronisation reste disponible.';box.append(caption);
-  for(const [label,value] of [['Version iPhone',conflict.local],['Version Mac',conflict.remote]]){const section=document.createElement('section'),title=document.createElement('h4'),preview=document.createElement('pre');title.textContent=label+(value?'':' — supprimée');preview.textContent=value?[value.description,`${value.category} · ${value.servings} personne(s) · préparation ${value.prep} min · cuisson ${value.cook} min · ${value.favorite?'favorite':'sans favori'}`,value.ingredients,value.steps,value.notes,value.jarEnabled?[value.jarMode,value.jarSize,value.jarInstructions,value.jarStorage,value.jarSource].join('\n'):'Sans bocaux',value.photos.length+' photo(s)',value.history.map(h=>h.date+' : '+h.note).join('\n'),JSON.stringify(value.waitItems||[])].filter(Boolean).join('\n\n'):'La recette a été supprimée sur cet appareil.';const button=document.createElement('button');button.className='secondary';button.textContent=value?'Garder la '+label.toLowerCase():'Confirmer la suppression';button.onclick=()=>{box.replaceChildren();resolve(value?[value]:[])};section.append(title);if(value?.photos[0]){const image=document.createElement('img');image.src=value.photos[0];image.alt=label+' — couverture';image.className='sync-cover';section.append(image);}section.append(preview,button);box.append(section);}
+  for(const [label,value] of [['Version iPhone',conflict.local],['Version Mac',conflict.remote]]){const section=document.createElement('section'),title=document.createElement('h4'),preview=document.createElement('pre');title.textContent=label+(value?'':' — supprimée');preview.textContent=value?[value.description,`${value.category} · ${value.servings} personne(s) · préparation ${value.prep} min · cuisson ${value.cook} min · ${value.favorite?'favorite':'sans favori'}`,value.ingredients,value.steps,value.notes,value.jarEnabled?[value.jarMode,value.jarSize,value.jarInstructions,value.jarStorage,value.jarSource].join('\n'):'Sans bocaux',value.photos.length+' photo(s)',value.history.map(h=>h.date+' : '+h.note).join('\n'),JSON.stringify(value.waitItems||[]),'Sous-recettes : ' +(value.subRecipes||[]).map(x=>(state.recipes.find(r=>r.id===x.recipeID)?.title||x.recipeID)+' · '+x.servings+' portions').join(', ')].filter(Boolean).join('\n\n'):'La recette a été supprimée sur cet appareil.';const button=document.createElement('button');button.className='secondary';button.textContent=value?'Garder la '+label.toLowerCase():'Confirmer la suppression';button.onclick=()=>{box.replaceChildren();resolve(value?[value]:[])};section.append(title);if(value?.photos[0]){const image=document.createElement('img');image.src=value.photos[0];image.alt=label+' — couverture';image.className='sync-cover';section.append(image);}section.append(preview,button);box.append(section);}
   if(conflict.local&&conflict.remote){const both=document.createElement('button');both.className='primary';both.textContent='Garder les deux recettes';both.onclick=()=>{box.replaceChildren();const copy=structuredClone(conflict.remote);copy.id=crypto.randomUUID();copy.title+=' (version Mac)';resolve([conflict.local,copy]);};box.append(both);}
   const cancel=document.createElement('button');cancel.className='text-button';cancel.textContent='Annuler la synchronisation';cancel.onclick=()=>{box.replaceChildren();resolve(null)};box.append(cancel);box.scrollIntoView({block:'start'});
  });
@@ -89,7 +89,7 @@ async function syncPhone(testOnly=false){
   const endpoint=CarnetSyncCore.endpoint(document.querySelector('#sync-phone-code').value);
   if(endpoint.pairing){syncStage('Vérification du PIN à 4 chiffres…');const paired=await syncFetch(endpoint,'/pair',{});if(paired.protocol!==1||!/^[-_a-zA-Z0-9]{32}$/.test(paired.token))throw new Error('Version du Mac incompatible.');endpoint.token=paired.token;}
   syncStage('Connexion au Mac et réception du carnet…');
-  const remote=await syncFetch(endpoint,'/snapshot');if(remote.protocol!==2||!/^[-a-zA-Z0-9]{36}$/.test(remote.hostID)||typeof remote.digest!=='string')throw new Error('Mettez à jour Carnet sur le Mac et l’iPhone vers la version 2.2.');
+  const remote=await syncFetch(endpoint,'/snapshot');if(remote.protocol!==3||!/^[-a-zA-Z0-9]{36}$/.test(remote.hostID)||typeof remote.digest!=='string')throw new Error('Mettez à jour Carnet sur le Mac et l’iPhone vers la version 2.4.');
   const their=validateState(remote.state);if(await CarnetSyncCore.hash(their)!==remote.digest)throw new Error('Le carnet reçu est incomplet. Réessayez.');
   syncStage('Mac joignable. Carnet reçu : '+their.recipes.length+' recette(s).');
   if(testOnly){syncStage('TEST RÉUSSI : connexion sécurisée au Mac opérationnelle. Aucun carnet modifié.');return;}
@@ -117,7 +117,7 @@ async function syncPhone(testOnly=false){
 }
 window.CarnetSyncHost={async handle(path,body){
  if(!native||!syncInfo||!window.carnetSyncLocked)throw new Error('La connexion au Mac est fermée.');
- if(path==='/snapshot'){const snapshot=await syncSnapshot();return {protocol:2,hostID:syncInfo.hostID,digest:await CarnetSyncCore.hash(snapshot),state:snapshot};}
+ if(path==='/snapshot'){const snapshot=await syncSnapshot();return {protocol:3,hostID:syncInfo.hostID,digest:await CarnetSyncCore.hash(snapshot),state:snapshot};}
  if(path==='/commit'){
   if(syncRunning)throw new Error('Un échange est déjà en cours.');
   syncRunning=true;document.querySelector('#sync-close').disabled=true;

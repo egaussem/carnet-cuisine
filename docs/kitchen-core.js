@@ -25,7 +25,8 @@ const CarnetKitchen=(()=>{
  }
  function scaled(recipe,servings){return ingredientItems(recipe).map(x=>scale(x,servings/recipe.servings));}
  function unitInfo(unit){const u=norm(unit).trim().replace(/\s+/g,' ');const conversions={kg:['g',1000],g:['g',1],mg:['g',.001],l:['ml',1000],dl:['ml',100],cl:['ml',10],ml:['ml',1]};if(conversions[u])return conversions[u];return [u.replace(/^(pieces?|gousses?|tranches?|sachets?|poignees?|branches?|boites?|bottes?|verres?)$/,s=>s.replace(/s$/,'')),1];}
- function groceries(picks,pantry=[],exclude=false){
+ function groceries(picks,pantry=[],exclude=false,recipes=[]){
+  picks=picks.flatMap(({recipe,servings})=>CarnetSubrecipes.expand(recipe,servings,recipes));
   const groups=new Map();
   for(const {recipe,servings} of picks){for(const item of scaled(recipe,servings)){
    if(exclude&&pantry.some(name=>hasIngredient({ingredientItems:[item]},name)))continue;

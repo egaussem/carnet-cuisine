@@ -1,8 +1,8 @@
 // Generated from the public app files. No recipes or personal photos are cached here.
 'use strict';
-const FILES=["app.js", "design.css", "editor-tools.js", "favicon.svg", "foraging.js", "icons/.gitkeep", "icons/apple-touch-icon.png", "icons/icon-192.png", "icons/icon-512.png", "icons/icon-maskable.png", "index.html", "ingredients.js", "jsQR-LICENSE.txt", "jsQR-NOTICE.txt", "jsQR.js", "kitchen-core.js", "kitchen.css", "kitchen.js", "manifest.webmanifest", "produce-icons.js", "pwa.js", "ratatouille.png", "recipe-tools.js", "seasons.js", "seed-photo.js", "style.css", "sync-core.js", "sync.css", "sync.js", "web.css"];
+const FILES=["app.js", "design.css", "editor-tools.js", "favicon.svg", "foraging.js", "icons/.gitkeep", "icons/apple-touch-icon.png", "icons/icon-192.png", "icons/icon-512.png", "icons/icon-maskable.png", "index.html", "ingredients.js", "jsQR-LICENSE.txt", "jsQR-NOTICE.txt", "jsQR.js", "kitchen-core.js", "kitchen.css", "kitchen.js", "manifest.webmanifest", "produce-icons.js", "pwa.js", "ratatouille.png", "recipe-tools.js", "seasons.js", "seed-photo.js", "style.css", "subrecipes-core.js", "subrecipes.js", "sync-core.js", "sync.css", "sync.js", "web.css"];
 const PREFIX='carnet-pwa:'+encodeURIComponent(new URL(self.registration.scope).pathname)+':';
-const CACHE=PREFIX+'412602cb0dc056fc';
+const CACHE=PREFIX+'942e50dc0ebe0bbc';
 const BASE=new URL(self.registration.scope);
 const ASSETS=new Set(FILES.map(p=>new URL(p,BASE).href));
 self.addEventListener('install',event=>event.waitUntil((async()=>{const cache=await caches.open(CACHE);await cache.addAll(FILES.map(p=>new Request(new URL(p,BASE),{cache:'reload'})));})()));
