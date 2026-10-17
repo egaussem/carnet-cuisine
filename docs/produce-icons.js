@@ -174,3 +174,40 @@ const mushroomSymbol='<svg class="produce-icon" viewBox="0 0 64 64" aria-hidden=
  alias('Échalote grise|Oignon nouveau|Oignon rouge|Oignon blanc','Oignon');
  alias('Sucre vanillé|Sucre roux|Sucre de canne','Sucre');
 })();
+
+// Épicerie asiatique et préparations courantes, dessinées dans la même palette.
+(()=>{
+ const p=(d,f,s='none')=>`<path d="${d}" fill="${f}" stroke="${s}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`;
+ const e=(x,y,rx,ry,f)=>`<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" fill="${f}"/>`;
+ const set=(names,art)=>names.split('|').forEach(n=>PRODUCE_ART[n]=art);
+ const bottle=(body,label)=>p('M26 5h12v17l10 10v25H16V32l10-10Z',body,'#7f8c83')+p('M24 4h16v8H24Z','#8a7158')+p('M20 35h24v16H20Z',label)+p('M26 39h12M26 44h9','none','#91785c');
+ const bowl=p('M8 32h48Q52 56 32 56T8 32','#d0dfda','#78958c')+e(32,32,24,7,'#e9d5a7');
+ set('Cébette|Ciboule',p('M18 49 24 28 28 7M23 49 35 12M28 50 47 17','none','#5d925f')+p('M14 44 21 33l13 7-4 14Q18 63 14 44','#ecebd7','#8fa987')+p('M19 56l-3 6M24 56v6','none','#bea577'));
+ set('Kombu|Algue kombu',p('M17 9q10 7 20 0l6 44q-13-7-25 1Z','#4c6d52','#3f5d49')+p('M25 17q10 9 3 29M34 16l2 28','none','#82955c'));
+ set('Algue nori|Nori|Algue séchée',p('M11 17 43 9l11 39-34 8Z','#52735b','#3d5d4c')+p('M17 24 43 18M19 32l26-7M21 40l26-7M24 47l26-7','none','#7e9167'));
+ set('Shiitaké|Shiitake|Shiitaké séché|Champignon shiitaké',p('M25 31h13l6 24H19Z','#d8c4a5','#a89375')+p('M7 33Q7 7 31 7T57 33Z','#9f7454','#795d46')+p('M23 17l17 10M37 15 24 28','none','#ead9bb'));
+ set('Katsuobushi|Bonite séchée|Copeaux de bonite',bowl+p('M13 28q12-20 19-10q-12 5-5 13M25 28q13-19 20-9l-7 8M38 30q8-15 15-8','none','#be8e69'));
+ set('Mirin',bottle('#d8c18c','#f5e7be'));set('Saké|Sake',bottle('#dce3d3','#e8b8a4'));
+ set('Sauce soja claire|Sauce soja foncée|Shoyu|Tamari',bottle('#896952','#e5c399'));
+ set('Sauce huître|Sauce d’huître|Sauce hoisin|Sauce yakitori',bottle('#9c7457','#c9d1a0'));
+ set('Vinaigre de riz',bottle('#e5d8ab','#d7e5d3'));
+ set('Huile neutre|Huile végétale|Huile de pépins de raisin',PRODUCE_ART.Huile);
+ set('Pousses de bambou|Bambou|Menma',p('M11 47 20 12l10 4-7 35ZM28 52l6-39 11 2-5 40ZM45 51l4-29 9 3-4 28Z','#d7c788','#af9e65')+p('M16 28l11 3M13 40l11 3M31 29l12 2M30 43l11 2M48 35l9 2','none','#f3e7b5'));
+ set('Pousse de soja|Germe de soja',p('M20 19q-15 20 2 33M40 18q-13 20 5 32','none','#ded8b3')+e(21,18,7,5,'#a7b76e')+e(41,18,7,5,'#bbc77d'));
+ set('Nouilles ramen|Ramen|Nouille de riz|Udon|Soba',bowl+p('M16 29q-8-17 3-20t3 20M29 30q-8-17 3-20t3 20M42 30q-8-17 3-20t3 20','none','#c9aa69')+p('M8 10 54 24M11 4l45 15','none','#9a7956'));
+ set('Miso|Pâte de miso',p('M12 18h40l-5 37H17Z','#d6c1a1','#9c8a71')+e(32,18,20,6,'#af875d')+p('M24 30h17v15H24Z','#f2e1ba'));
+ set('Gochujang|Pâte de curry|Sriracha',p('M15 17h34v39H15Z','#b16c57','#8b6754')+p('M12 10h40v10H12Z','#9c6151')+p('M23 30h18v15H23Z','#edd7ae'));
+ set('Wasabi',p('M17 51q-9-13 2-18q-3-10 10-13q-3-10 8-14q-1 12 9 19q12 10 1 15q14 13-2 15Z','#a0b97b','#779359'));
+ set('Narutomaki|Surimi',e(32,35,25,22,'#eee6d6')+p('M44 29q-15-18-28 0t10 19q21 0 18-15t-15-9q-10 6-1 12q9 5 10-2','none','#ce8f99'));
+ set('Glaçon|Glace pilée',p('M11 21 29 9l17 12v21L28 55 11 42Z','#c1dde0','#8fb4bd')+p('M11 21 28 34l18-13M28 34v21M19 21l9-6','none','#eff8f5'));
+ set('Kansui',p('M17 12h30v43H17Z','#dce0bf','#9ba37d')+p('M16 7h32v9H16Z','#a2ad87')+p('M24 26h16v16H24Z','#faf5e2')+p('M29 30l6 8M35 30l-6 8','none','#8b9e70'));
+ set('Colorant alimentaire|Colorant alimentaire rouge',p('M27 5h10v13H27Z','#989f99')+p('M23 18h18l7 13v23H16V31Z','#dba8a5','#ac8280')+p('M22 34h20v13H22Z','#f2e5ce')+e(32,40,4,5,'#c67d85'));
+ set('Carcasse de poulet|Os de poulet',p('M19 16q-10-13-16-3q-4 10 8 12l32 26q8 15 17 4q7-11-6-16L23 19Z','#e5d9c4','#bba58d')+p('M21 22q-8 20 10 24M30 27q-8 20 11 24','none','#bc9c7d'));
+ set('Pied de porc',p('M23 8h20l-2 25 12 14q0 12-17 12H18q-12-3-9-13l12-16Z','#dcae9b','#ad8474')+p('M22 44v13M34 43v15M45 45l-2 11','none','#ad8474'));
+ set('Poitrine de porc|Lard',p('M8 21 49 14l8 30-42 10Z','#ce9c86','#a57d69')+p('M11 28l40-7 3 8-41 8ZM15 43l40-8 1 6-40 8Z','#eed9b8'));
+ set('Filet de poisson blanc|Poisson blanc',PRODUCE_ART.Poisson);
+ set('Bok choy|Pak choï',p('M24 55 20 28l20-2-1 28Z','#e4e7ce','#9cae88')+p('M20 32Q1 28 10 11t20 10Q29 0 44 8t1 25Z','#689a6c','#4e8058')+p('M31 52V20','none','#f0efd3'));
+ set('Edamame',p('M8 47Q22 8 54 15Q50 48 8 47','#7ea766','#5e8d51')+e(22,36,6,7,'#b2cb86')+e(34,28,6,7,'#b2cb86')+e(45,23,5,6,'#b2cb86'));
+ set('Feuille de riz|Galette de riz',e(32,33,25,25,'#e7e0c8')+p('M15 19l34 27M11 28l31 25M23 11l30 25M16 46l30-31M13 36l25-25M26 54l27-27','none','#f8f4e6'));
+ set('Dashi',bowl+p('M20 19q-7-8 0-13M32 19q-7-8 0-13M44 19q-7-8 0-13','none','#a6b8af'));
+})();
