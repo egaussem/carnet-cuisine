@@ -9,7 +9,7 @@ async function fixture(flags={}){
   fetch:async(url,options)=>{if(flags.hang)return new Promise((resolve,reject)=>options.signal.addEventListener('abort',()=>{const e=new Error('aborted');e.name='AbortError';reject(e)}));const path=new URL(url).pathname;let value;
    if(flags.network)throw new TypeError('unreachable');
    if(path==='/pair'){if(flags.badPIN)return {ok:false,status:403,json:async()=>({error:'PIN incorrect.'})};value={protocol:1,token:'A'.repeat(32)};}
-   else if(path==='/snapshot')value={protocol:flags.old?1:2,hostID:'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',state:host,digest:await core.hash(host)};
+   else if(path==='/snapshot')value={protocol:flags.old?2:3,hostID:'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',state:host,digest:await core.hash(host)};
    else if(path==='/commit'){const payload=JSON.parse(options.body);assert.equal(payload.expected,await core.hash(host));host=payload.state;commits++;if(failResponse){failResponse=false;throw new TypeError('lost response');}value={digest:await core.hash(host)};}
    else if(path==='/finish'){finishes++;value={ok:true};}else throw Error(path);
    return{ok:true,json:async()=>structuredClone(value)};
@@ -33,7 +33,8 @@ async function fixture(flags={}){
  test=await fixture({hang:true,timeout:true});await test.open();await test.click();assert.match(test.nodes.get('#sync-status').textContent,/DÉLAI DÉPASSÉ/);assert.equal(test.nodes.get('#sync-connect').disabled,false);
  let flags={hang:true};test=await fixture(flags);await test.open();const waiting=test.click();await new Promise(resolve=>setImmediate(resolve));test.nodes.get('#sync-cancel-request').onclick();await waiting;assert.match(test.nodes.get('#sync-status').textContent,/ATTENTE ARRÊTÉE/);assert(!flags.saved.includes('A'.repeat(32)));assert(!flags.saved.includes('192.168'));
  test=await fixture();await test.open();await vm.runInContext('syncPhone(true)',test.context);assert.equal(test.commits(),0);assert.equal(test.store.size,0);assert.match(test.nodes.get('#sync-status').textContent,/TEST RÉUSSI/);
- test=await fixture({old:true});await test.open();await test.click();assert.equal(test.commits(),0);assert.match(test.nodes.get('#sync-status').textContent,/2.2/);
+ test=await fixture({old:true});await test.open();await test.click();assert.equal(test.commits(),0);assert.match(test.nodes.get('#sync-status').textContent,/2.4/);
  test=await fixture({phone:{planner:[{id:'meal',recipeID:'a',date:'2026-10-11',slot:'Dîner',servings:8}]},host:{shopping:[{id:'item',name:'Farine',quantity:'1 kg',checked:true,manual:false}]}});await test.open();await test.click();assert.equal(test.commits(),1);assert.deepEqual(test.phone(),test.host());assert.equal(test.phone().planner.length,1);assert.equal(test.phone().shopping[0].checked,true);
+ test=await fixture({phone:{recipes:[{id:'parent',title:'Ramen',photos:[],subRecipes:[{recipeID:'a',servings:2,note:'La veille'}]}]}});await test.run();assert.equal(test.commits(),1);assert.equal(test.host().recipes.find(r=>r.id==='parent').subRecipes[0].recipeID,'a');assert.deepEqual(test.phone(),test.host());
  console.log('PASS sync flow: successful exchange, phone backup before upload, interrupted response recovery, quota before upload, quota after Mac commit, pending transaction recovery without duplicate upload.');
 })().catch(e=>{console.error(e);process.exitCode=1});

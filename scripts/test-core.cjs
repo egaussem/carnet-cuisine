@@ -1,7 +1,7 @@
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict'),crypto=require('node:crypto');
 const stubs=new Map(),el=()=>({addEventListener(){},classList:{add(){},remove(){},toggle(){}},setAttribute(){},innerHTML:'',textContent:'',elements:{}});
 const ctx={location:{href:"https://example.github.io/carnet/"},console,structuredClone,crypto,URL,Date,setTimeout,clearTimeout,document:{querySelector(s){if(!stubs.has(s))stubs.set(s,el());return stubs.get(s)},querySelectorAll(){return []},addEventListener(){}},window:{addEventListener(){},scrollTo(){}}};vm.createContext(ctx);
-const run=s=>vm.runInContext(s,ctx);for(const f of ['seasons.js','seed-photo.js','foraging.js','produce-icons.js','ingredients.js','recipe-tools.js','editor-tools.js','kitchen-core.js','app.js'])run(fs.readFileSync('outputs/Carnet-web/docs/'+f,'utf8').replace(/\ninit\(\);/,''));
+const run=s=>vm.runInContext(s,ctx);for(const f of ['seasons.js','seed-photo.js','foraging.js','produce-icons.js','ingredients.js','recipe-tools.js','editor-tools.js','subrecipes-core.js','kitchen-core.js','app.js'])run(fs.readFileSync('outputs/Carnet-web/docs/'+f,'utf8').replace(/\ninit\(\);/,''));
 assert.equal(run('SEASONS.flatMap(s=>[...s.fruits,...s.vegetables]).filter(n=>!PRODUCE_ART[n]).join(",")'),'');
 assert.notEqual(run('PRODUCE_ART.Courgette'),run('PRODUCE_ART.Concombre'));assert.notEqual(run('PRODUCE_ART.Abricot'),run('PRODUCE_ART.Pêche'));
 assert(run('FORAGING.filter(x=>x.kind==="nut").every(x=>PRODUCE_ART[x.name])'));
