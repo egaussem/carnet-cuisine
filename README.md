@@ -1,4 +1,4 @@
-# Carnet 2.4 — application web installable
+# Carnet 2.5 — application web installable
 
 Carnet sert à écrire des recettes, suivre leurs préparations, prévoir une version en bocaux et retrouver des idées avec les ingrédients du frigo. Il inclut les saisons des fruits et légumes en France et un calendrier indicatif de cueillette autour d’Annecy.
 
@@ -82,3 +82,10 @@ Créer et enregistrer séparément les préparations (bouillon, œufs marinés, 
 À la consultation, adapter les personnes : les quantités de chaque préparation suivent ce choix, les durées restent inchangées. Ouvrir les ingrédients/étapes dans la fiche ou ouvrir la préparation et revenir au plat. Les modifications de la préparation sont reprises dans tous les plats qui l’utilisent. Les courses additionnent les ingrédients de toute la composition. Le mode cuisine parcourt les préparations avant l’assemblage ; PDF et partage JSON incluent les sous-recettes, photos comprises.
 
 Une recette utilisée doit être retirée des liens avant suppression. Les cycles et les liens manquants sont refusés ; imbrication limitée à 8 niveaux et 64 préparations directes. Mettre à jour Mac et iPhone vers 2.4 avant synchronisation : le protocole 3 protège les nouveaux liens contre leur perte par les anciennes versions. Les anciennes sauvegardes restent importables. Aucun exemple n’est ajouté au carnet personnel et aucune donnée n’est envoyée à GitHub.
+
+
+### Carnet 2.5 — cuisines et ingrédients
+
+Les types de recettes (plat, sauce, dessert…) sont complétés par les cuisines et influences. Modifier → Cuisine et influences permet plusieurs choix et des libellés personnels. Les filtres par région incluent leurs cuisines : Asiatique retrouve Japonaise, et Française retrouve Savoyarde. Les étiquettes figurent sur les cartes, les fiches et les impressions, et sont conservées dans les sauvegardes et partages. Les anciennes fiches gardent leur absence de classement jusqu’à modification.
+
+Mettre à jour les deux appareils en 2.5 avant synchronisation : le protocole 4 protège les cuisines contre leur perte par les anciennes versions. Le catalogue d’icônes locales couvre aussi l’épicerie asiatique : cébette, kombu, nori, shiitaké, katsuobushi, mirin, saké, bambou, miso, nouilles et autres ingrédients. Tests : `node scripts/test-cuisines.cjs`, puis tests du cœur, sous-recettes, courses, synchronisation et cache.
